@@ -114,7 +114,7 @@ object Main extends App {
 
       try {
         val in: InputStream = uc.getInputStream()
-        val json = scala.io.Source.fromInputStream(in).mkString.parseJson.asInstanceOf[JsArray]
+        val json = scala.io.Source.fromInputStream(in)("UTF-8").mkString.parseJson.asInstanceOf[JsArray]
         data = data ++ json.elements.map(elem => elem.convertTo[T])
 
         if (uc.getHeaderField("Link") == null) {
