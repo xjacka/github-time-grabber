@@ -15,3 +15,6 @@ Aplikace má několik parametrů:
  4. volitelně kolik dní nazpět se má končit
 
 např. github-time-grabber mojeJmeno tokenASDFA412ASDFASDF 2 1
+
+Je možné spustit pomocí sbt:
+$ sbt "run name token"
