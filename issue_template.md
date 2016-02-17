@@ -1,1 +1,0 @@
-Verze aplikace:

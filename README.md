@@ -8,13 +8,14 @@ Možné formáty jsou:
 - 1.5h
 
 Aplikace má několik parametrů:
- 1. github jméno uživatele, pro kterého se mají najít záznamy
- 2. github token pro přístup k repozitáři
+ 1. název společnosti na githubu ze které se berou repozitáře
+ 2. github jméno uživatele, pro kterého se mají najít záznamy
+ 3. github token pro přístup k repozitáři
   - Token je potřeba nastavit zde https://github.com/settings/tokens a musí mít přístup na __repo__
- 3. volitelně kolik dní nazpět se má brát
- 4. volitelně kolik dní nazpět se má končit
+ 4. volitelně kolik dní nazpět se má brát
+ 5. volitelně kolik dní nazpět se má končit
 
-např. github-time-grabber mojeJmeno tokenASDFA412ASDFASDF 2 1
+např. github-time-grabber nazevSpolecnosti mojeJmeno tokenASDFA412ASDFASDF 2 1
 
 Je možné spustit pomocí sbt:
-$ sbt "run name token"
+$ sbt "run spolecnost name token"

@@ -27,20 +27,18 @@ object MyJsonProtocol extends DefaultJsonProtocol {
 
 object Main extends App {
 
-  lazy val companyName = "myCompany"
-
   import MyJsonProtocol._
 
   override def main(args: Array[String]): Unit = {
     args.length match {
-      case 2 =>
-        showTodayLoggedTime(args(0), args(1))
       case 3 =>
-        showTodayLoggedTime(args(0), args(1), args(2).toInt, args(2).toInt - 1)
+        showTodayLoggedTime(args(0), args(1), args(2))
       case 4 =>
-        showTodayLoggedTime(args(0), args(1), args(2).toInt, args(3).toInt - 1)
+        showTodayLoggedTime(args(0), args(1), args(2), args(3).toInt, args(3).toInt - 1)
+      case 5 =>
+        showTodayLoggedTime(args(0), args(1), args(2), args(3).toInt, args(4).toInt - 1)
       case _ =>
-        println("Zadejte prosím svoje github jméno a github token")
+        println("Zadejte prosím název společnosti, github jméno a github token")
     }
   }
 
@@ -59,7 +57,7 @@ object Main extends App {
     return (zeroedDate, endOfTheDay)
   }
 
-  def showTodayLoggedTime(username: String, token: String, beforeDaysFrom: Int = 0, beforeDaysTo: Int = -1) = {
+  def showTodayLoggedTime(companyName: String, username: String, token: String, beforeDaysFrom: Int = 0, beforeDaysTo: Int = -1) = {
 
     val (zeroedDate, endOfTheDay) = getTimeInterval(beforeDaysFrom, beforeDaysTo)
 
@@ -68,7 +66,7 @@ object Main extends App {
     isoDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"))
     val nowAsISO = isoDateFormat.format(zeroedDate)
 
-    val repos = loadCompanyRepos(this.companyName, token)
+    val repos = loadCompanyRepos(companyName, token)
     val timeComments = repos.map((repo: Repo) =>
           getTime(getCommentFromRepo(username, token, repo.url + "/issues/comments?since=" + nowAsISO)
                     .filter(t => isoDateFormat.parse(t.createdAt).before(endOfTheDay))
