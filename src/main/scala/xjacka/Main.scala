@@ -88,8 +88,8 @@ object Main extends App {
   }
 
   def getMinutes(input: String): Float = {
-    val min = if ( input.contains("min") ) Try((input.split("min").head.split("h").last.trim).toFloat).toOption else Some(0f)
-    val h = if (input.contains("h") ) Try((input.split("h").head.split("min").last.trim).toFloat).toOption else Some(0f)
+    val min = if ( input.contains("min") ) Try((input.split(":clock[0-9]:").last.trim.split("min").head.split("h").last.trim).toFloat).toOption else Some(0f)
+    val h = if (input.contains("h") ) Try((input.split(":clock[0-9]:").last.trim.split("h").head.split("min").last.trim).toFloat).toOption else Some(0f)
     min.getOrElse(0f) + h.getOrElse(0f) * 60f
   }
 
@@ -143,7 +143,7 @@ object Main extends App {
   }
 
   def getTime(comments: List[Comment]): List[String] = {
-    comments.map(_.body.split("\n").filter(_.trim.matches(".*:clock[0-9]+:.*")).mkString("\n").replaceAll(":clock[0-9]:",""))
+    comments.map(_.body.split("\n").filter(_.trim.matches(".*:clock[0-9]+:.*")).mkString("\n"))
   }
 
 }
