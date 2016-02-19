@@ -1,6 +1,5 @@
 package xjacka
 
-import java.io.{FileNotFoundException, InputStream}
 import java.net.{URL, URLConnection}
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Date, TimeZone}
@@ -100,46 +99,41 @@ object Main extends App {
   }
 
   def loadDataFromGithub[T : JsonReader](token: String, apiUrl: String): List[T] = {
-    var url = new URL(apiUrl)
-    var data = List[T]()
-    var brk = true
-
-    do {
-
+    def makeRequest(apiURL: String): URLConnection = {
+      if(apiURL == "") return null
+      val url = new URL(apiURL)
       val uc: URLConnection = url.openConnection()
       uc.setRequestProperty("Authorization", "token " + token)
       uc.setRequestProperty("Content-Type", "application/json")
+      uc
+    }
 
-      try {
-        val in: InputStream = uc.getInputStream()
-        val json = scala.io.Source.fromInputStream(in)("UTF-8").mkString.parseJson.asInstanceOf[JsArray]
-        data = data ++ json.elements.map(elem => elem.convertTo[T])
-
-        if (uc.getHeaderField("Link") == null) {
-          brk = false
-        } else {
-          val ln = uc.getHeaderField("Link").split(",").filter(str => str.contains("rel=\"next\""))
-
-          if (ln.length <= 0) {
-            brk = false
-          } else {
-            val link = ln(0)
-            val startPosition = link.indexOf("<") + 1
-            val endPosition = link.indexOf(">", startPosition)
-            val subS = link.substring(startPosition, endPosition)
-
-            url = new URL(subS)
-          }
-        }
-      } catch {
-        case e: FileNotFoundException =>
-          println("source not found")
-          brk = false
+    def getLinkToNext(urlConnection: URLConnection) : String = {
+      if (!hasNext(urlConnection)) "" else {
+        val ln = urlConnection.getHeaderField("Link").split(",").filter(str => str.contains("rel=\"next\""))
+        val link = ln(0)
+        val startPosition = link.indexOf("<") + 1
+        val endPosition = link.indexOf(">", startPosition)
+        link.substring(startPosition, endPosition)
       }
+    }
 
-    } while(brk)
+    def hasNext(urlConnection: URLConnection): Boolean = {
+      if (urlConnection.getHeaderField("Link") == null) false else {
+        if (urlConnection.getHeaderField("Link").split(",").filter(str => str.contains("rel=\"next\"")).length <= 0) false
+        else true
+      }
+    }
 
-    return data
+    def parseData(uc: URLConnection) = {
+      val in = uc.getInputStream()
+      val json = scala.io.Source.fromInputStream(in)("UTF-8").mkString.parseJson.asInstanceOf[JsArray]
+      json.elements.map(elem => elem.convertTo[T]).toList
+    }
+
+    def responses(resource : URLConnection) : Stream[URLConnection] = resource #:: responses(makeRequest(getLinkToNext(resource)))
+
+    responses(makeRequest(apiUrl)).takeWhile((resources: URLConnection) => resources != null).toList.map(parseData(_)).flatten
   }
 
   def getTime(comments: List[Comment]): List[String] = {
