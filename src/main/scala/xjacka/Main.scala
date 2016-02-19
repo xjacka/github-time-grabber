@@ -1,5 +1,6 @@
 package xjacka
 
+import java.io.FileNotFoundException
 import java.net.{URL, URLConnection}
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Date, TimeZone}
@@ -125,15 +126,22 @@ object Main extends App {
       }
     }
 
-    def parseData(uc: URLConnection) = {
-      val in = uc.getInputStream()
-      val json = scala.io.Source.fromInputStream(in)("UTF-8").mkString.parseJson.asInstanceOf[JsArray]
-      json.elements.map(elem => elem.convertTo[T]).toList
+    def parseData(uc: URLConnection) : List[T] = {
+      try {
+        val in = uc.getInputStream()
+        val json = scala.io.Source.fromInputStream(in)("UTF-8").mkString.parseJson.asInstanceOf[JsArray]
+        in.close()
+        return json.elements.map(elem => elem.convertTo[T]).toList
+      } catch {
+        case e: FileNotFoundException =>
+          println("source not found")
+      }
+      return List[T]()
     }
 
     def responses(resource : URLConnection) : Stream[URLConnection] = resource #:: responses(makeRequest(getLinkToNext(resource)))
 
-    responses(makeRequest(apiUrl)).takeWhile((resources: URLConnection) => resources != null).toList.map(parseData(_)).flatten
+    responses(makeRequest(apiUrl)).takeWhile(_ != null).toList.flatMap(parseData(_))
   }
 
   def getTime(comments: List[Comment]): List[String] = {
