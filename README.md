@@ -16,7 +16,7 @@ Možné formáty jsou:
  5. volitelně kolik dní nazpět se má končit
 
 ### Spuštění
-[Stáhněte](https://github.com/xjacka/github-time-grabber/releases/download/0.1/github-time-grabber.jar) si jar archiv ze stránky [releases](https://github.com/xjacka/github-time-grabber/releases) a spusťte ho:    
+[Stáhněte](https://github.com/xjacka/github-time-grabber/releases/download/0.2/github-time-grabber.jar) si jar archiv ze stránky [releases](https://github.com/xjacka/github-time-grabber/releases) a spusťte ho:    
 např.    
 `$ java -jar github-time-grabber.jar spolecnost jmeno token`    
 nebo    
