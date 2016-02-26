@@ -4,7 +4,9 @@ import java.io.FileNotFoundException
 import java.net.{URL, URLConnection}
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Date, TimeZone}
+
 import spray.json._
+
 import scala.util.Try
 
 case class Assignee(login: String) {
@@ -141,7 +143,7 @@ object Main extends App {
   }
 
   def getTime(comments: List[Comment]): List[String] = {
-    comments.map(_.body.split("\n").filter(_.trim.matches(".*:clock[0-9]+:.*")).mkString("\n"))
+    comments.flatMap(_.body.split("\n").filter(_.trim.matches(".*:clock[0-9]+:.*")))
   }
 
 }
