@@ -24,11 +24,11 @@ object MyJsonProtocol extends DefaultJsonProtocol {
   implicit val repoFormat = jsonFormat(Repo, "name", "url")
 }
 
-object Main extends App {
+object Main {
 
   import MyJsonProtocol._
 
-  override def main(args: Array[String]): Unit = {
+  def main(args: Array[String]): Unit = {
     args.length match {
       case 3 =>
         showTodayLoggedTime(args(0), args(1), args(2))
