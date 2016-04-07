@@ -13,14 +13,14 @@ case class Assignee(login: String) {
   override def toString = login
 }
 
-case class Issue(title: String, number: Int, assignee: Option[Assignee], createdAt: String)
+//case class Issue(title: String, number: Int, assignee: Option[Assignee])
 case class Comment(body: String, createdAt: String, user: Option[Assignee])
 case class Repo(name: String, url: String)
 
 object MyJsonProtocol extends DefaultJsonProtocol {
   implicit val assigneeFormat = jsonFormat(Assignee, "login")
   implicit val commentFormat = jsonFormat(Comment, "body", "created_at", "user")
-  implicit val issueFormat = jsonFormat(Issue, "title", "number", "assignee", "created_at")
+//  implicit val issueFormat = jsonFormat(Issue, "title", "number", "assignee")
   implicit val repoFormat = jsonFormat(Repo, "name", "url")
 }
 
