@@ -13,14 +13,14 @@ case class Assignee(login: String) {
   override def toString = login
 }
 
-case class Issue(title: String, number: Int, assignee: Option[Assignee])
+case class Issue(title: String, number: Int, assignee: Option[Assignee], createdAt: String)
 case class Comment(body: String, createdAt: String, user: Option[Assignee])
 case class Repo(name: String, url: String)
 
 object MyJsonProtocol extends DefaultJsonProtocol {
   implicit val assigneeFormat = jsonFormat(Assignee, "login")
   implicit val commentFormat = jsonFormat(Comment, "body", "created_at", "user")
-  implicit val issueFormat = jsonFormat(Issue, "title", "number", "assignee")
+  implicit val issueFormat = jsonFormat(Issue, "title", "number", "assignee", "created_at")
   implicit val repoFormat = jsonFormat(Repo, "name", "url")
 }
 
@@ -66,10 +66,14 @@ object Main {
     val nowAsISO = isoDateFormat.format(zeroedDate)
 
     val repos = loadCompanyRepos(companyName, token)
-    val timeComments = repos.map((repo: Repo) =>
-      getTime(getCommentFromRepo(username, token, repo.url + "/issues/comments?since=" + nowAsISO)
-        .filter(t => isoDateFormat.parse(t.createdAt).before(endOfTheDay))).filter(_ != "")).flatten
+    val comments = repos.flatMap((repo: Repo) =>
+        getCommentFromRepo(username, token, repo.url + "/issues/comments?since=" + nowAsISO)
+        .filter(comment =>
+          isoDateFormat.parse(comment.createdAt).before(endOfTheDay)
+        ).filter(_ != "")
+    ).sortBy(_.createdAt)
 
+    val timeComments = comments.flatMap(getTime)
     if (timeComments.length == 0) {
       println(s"Od ${readableDateFormat.format(zeroedDate)}  do ${readableDateFormat.format(endOfTheDay)} žádné záznamy")
     } else {
@@ -142,8 +146,12 @@ object Main {
     responses(makeRequest(apiUrl)).takeWhile(_ != null).toList.flatMap(parseData)
   }
 
-  def getTime(comments: List[Comment]): List[String] = {
-    comments.flatMap(_.body.split("\n").filter(_.trim.matches(".*:clock[0-9]+:.*")))
+  def getTime(comment: Comment): List[String] = {
+    val isoDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+    isoDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"))
+    val shoetDateFormat = new SimpleDateFormat("dd.MM: ")
+    comment.body.split("\n").map(shoetDateFormat.format(isoDateFormat.parse(comment.createdAt)) + _)
+      .filter(_.trim.matches(".*:clock[0-9]+:.*")).toList
   }
 
 }
