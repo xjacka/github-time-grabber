@@ -64,6 +64,7 @@ object Main {
     val isoDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
     isoDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"))
     val nowAsISO = isoDateFormat.format(zeroedDate)
+    val showtDateFormat = new SimpleDateFormat("dd.MM")
 
     val repos = loadCompanyRepos(companyName, token)
     val comments = repos.flatMap((repo: Repo) =>
@@ -73,15 +74,15 @@ object Main {
         ).filter(_ != "")
     ).sortBy(_.createdAt)
 
-    val timeComments = comments.flatMap(getTime)
+    val timeComments : List[(String, String)] = comments.flatMap(getTime)
     if (timeComments.length == 0) {
       println(s"Od ${readableDateFormat.format(zeroedDate)}  do ${readableDateFormat.format(endOfTheDay)} žádné záznamy")
     } else {
       println(s"Zalogovaný čas za ${readableDateFormat.format(zeroedDate)} až ${readableDateFormat.format(endOfTheDay)}")
-      timeComments.foreach(println)
+      timeComments.foreach(comment => println(s"${showtDateFormat.format(isoDateFormat.parse(comment._1))}: ${comment._2}"))
       println("==============")
-      println(s"Celkem: ${timeComments.map(getMinutes).sum.toInt} min")
-      println(s"Celkem: " + "%1.2f".format(timeComments.map(getMinutes).sum / 60) + " h")
+      println(s"Celkem: ${timeComments.map(text => getMinutes(text._2)).sum.toInt} min")
+      println(s"Celkem: " + "%1.2f".format(timeComments.map(text => getMinutes(text._2)).sum / 60) + " h")
     }
   }
 
@@ -146,12 +147,8 @@ object Main {
     responses(makeRequest(apiUrl)).takeWhile(_ != null).toList.flatMap(parseData)
   }
 
-  def getTime(comment: Comment): List[String] = {
-    val isoDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
-    isoDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"))
-    val shoetDateFormat = new SimpleDateFormat("dd.MM: ")
-    comment.body.split("\n").map(shoetDateFormat.format(isoDateFormat.parse(comment.createdAt)) + _)
-      .filter(_.trim.matches(".*:clock[0-9]+:.*")).toList
+  def getTime(comment: Comment): List[(String, String)] = {
+    comment.body.split("\n").filter(_.trim.matches(".*:clock[0-9]+:.*")).toList.map((comment.createdAt, _))
   }
 
 }
