@@ -91,8 +91,8 @@ object Main {
   }
 
   def getMinutes(input: String): Float = {
-    val min = if (input.contains("min")) Try(input.split(":clock[0-9]:").last.trim.split("min").head.split("h").last.trim.toFloat).toOption else Some(0f)
-    val h = if (input.contains("h")) Try(input.split(":clock[0-9]:").last.trim.split("h").head.split("min").last.trim.toFloat).toOption else Some(0f)
+    val min = if (input.contains("min")) Try(input.split(":clock[0-9]:").last.trim.split("min").head.split("h").last.trim.replace(',','.').toFloat).toOption else Some(0f)
+    val h = if (input.contains("h")) Try(input.split(":clock[0-9]:").last.trim.split("h").head.split("min").last.trim.replace(',','.').toFloat).toOption else Some(0f)
     min.getOrElse(0f) + h.getOrElse(0f) * 60f
   }
 
@@ -152,4 +152,3 @@ object Main {
   }
 
 }
-
