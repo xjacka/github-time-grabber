@@ -13,20 +13,21 @@ case class Assignee(login: String) {
   override def toString = login
 }
 
-//case class Issue(title: String, number: Int, assignee: Option[Assignee])
 case class Comment(body: String, createdAt: String, user: Option[Assignee])
 case class Repo(name: String, url: String)
 
 object MyJsonProtocol extends DefaultJsonProtocol {
   implicit val assigneeFormat = jsonFormat(Assignee, "login")
   implicit val commentFormat = jsonFormat(Comment, "body", "created_at", "user")
-//  implicit val issueFormat = jsonFormat(Issue, "title", "number", "assignee")
   implicit val repoFormat = jsonFormat(Repo, "name", "url")
 }
 
 object Main {
 
   import MyJsonProtocol._
+
+  type CommentRecord = (String, String)
+  type DateInterval = (Date, Date)
 
   def main(args: Array[String]): Unit = {
     args.length match {
@@ -41,7 +42,7 @@ object Main {
     }
   }
 
-  def getTimeInterval(beforeDaysFrom: Int, beforeDaysTo: Int): (Date, Date) = {
+  def getTimeInterval(beforeDaysFrom: Int, beforeDaysTo: Int): DateInterval = {
     val date = new Date()
     val cal = Calendar.getInstance()
     cal.setTime(date)
@@ -74,12 +75,12 @@ object Main {
         ).filter(_ != "")
     ).sortBy(_.createdAt)
 
-    val timeComments : List[(String, String)] = comments.flatMap(getTime)
+    val timeComments : List[CommentRecord] = comments.flatMap(getTime)
     if (timeComments.length == 0) {
       println(s"Od ${readableDateFormat.format(zeroedDate)}  do ${readableDateFormat.format(endOfTheDay)} žádné záznamy")
     } else {
       println(s"Zalogovaný čas za ${readableDateFormat.format(zeroedDate)} až ${readableDateFormat.format(endOfTheDay)}")
-      timeComments.foreach(comment => println(s"${showtDateFormat.format(isoDateFormat.parse(comment._1))}: ${comment._2}"))
+      timeComments.foreach(comment => println(s"${showtDateFormat.format(isoDateFormat.parse(comment._1))} ${comment._2.replaceAll(":clock[0-9]:",0x0231A.toChar.toString)}"))
       println("==============")
       println(s"Celkem: ${timeComments.map(text => getMinutes(text._2)).sum.toInt} min")
       println(s"Celkem: " + "%1.2f".format(timeComments.map(text => getMinutes(text._2)).sum / 60) + " h")
@@ -142,12 +143,13 @@ object Main {
       List[T]()
     }
 
-    def responses(resource: URLConnection): Stream[URLConnection] = resource #:: responses(makeRequest(getLinkToNext(resource)))
+    def responses(implicit resource: URLConnection): Stream[URLConnection] = resource #:: responses(makeRequest(getLinkToNext(resource)))
 
-    responses(makeRequest(apiUrl)).takeWhile(_ != null).toList.flatMap(parseData)
+    implicit val urlConnection : URLConnection = makeRequest(apiUrl)
+    responses.takeWhile(_ != null).toList.flatMap(parseData)
   }
 
-  def getTime(comment: Comment): List[(String, String)] = {
+  def getTime(comment: Comment): List[CommentRecord] = {
     comment.body.split("\n").filter(_.trim.matches(".*:clock[0-9]+:.*")).toList.map((comment.createdAt, _))
   }
 
